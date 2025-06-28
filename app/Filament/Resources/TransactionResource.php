@@ -3,8 +3,11 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Transaction;
 use App\Models\Menu;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -166,5 +169,22 @@ class TransactionResource extends Resource
             'create' => Pages\CreateTransaction::route('/create'),
             'edit' => Pages\EditTransaction::route('/{record}/edit'),
         ];
+    }
+
+
+    public static function canViewAny():bool{
+        return Auth::user()?->hasRole(['admin', 'super_admin']);
+    }
+
+    public static function canCreate():bool{
+        return Auth::user()?->hasRole(['admin', 'super_admin']);
+    }
+
+    public static function canEdit(Model $record): bool{
+        return Auth::user()?->hasRole('admin', 'super_admin');
+    }
+
+    public static function canDelete(Model $record): bool{
+        return Auth::user()?->hasRole('super_admin');
     }
 }
