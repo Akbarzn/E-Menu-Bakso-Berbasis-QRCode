@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
             $table->foreignId('menu_id')->constrained()->onDelete('cascade');
             $table->integer('jumlah');
-            $table->string('catatan');
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }

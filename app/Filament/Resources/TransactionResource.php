@@ -19,6 +19,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\EditAction;
@@ -35,9 +36,21 @@ class TransactionResource extends Resource
     {
         return $form->schema([
             TextInput::make('kode_transaksi')
-                ->default('TRX-' . strtoupper(uniqid()))
+             ->default(function () {
+        $lastId = \App\Models\Transaction::max('id') + 1;
+        return 'TRX-' . str_pad($lastId, 5, '0', STR_PAD_LEFT);
+    })
                 ->disabled()
-                ->dehydrated(),
+                ->dehydrated(false)
+                ->label('Kode Transaksi'),
+
+            TextInput::make('nama_pelanggan')
+                ->label('Nama Pelanggan')
+                ->required(),
+                
+            TextInput::make('nomor_meja')
+                ->label('Nomor Meja')
+                ->required(),    
 
             Select::make('metode_pembayaran')
                 ->options([
@@ -52,10 +65,10 @@ class TransactionResource extends Resource
                     'diproses' => 'Diproses',
                     'selesai' => 'Selesai',
                 ])
-                ->default('menunggu')
+                ->default('diproses')
                 ->required(),
 
-            Textarea::make('catatan')->nullable(),
+            // Textarea::make('catatan')->nullable(),/
 
             Repeater::make('menuTransactions')
                 ->relationship()
@@ -71,17 +84,25 @@ class TransactionResource extends Resource
                         ->numeric()
                         ->default(1)
                         ->required()
-                        ->reactive(),
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $get, callable $set){
+                            $harga = (int) $get('harga');
+                            $set('subtotal', $harga * (int) $state);
+                        }),
 
                     TextInput::make('harga')
                         ->numeric()
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->visible(false),
+                        ->disabled(),
+                        // ->dehydrated(false)
+                        // ->visible(false),
 
-                    TextInput::make('catatan')->nullable(),
+                    TextInput::make('subtotal')
+                        ->disabled()
+                        ->numeric(),    
+
+                    // TextInput::make('catatan')->nullable(),
                 ])
-                ->columns(3)
+                ->columns(4)
                 ->reactive()
                 ->afterStateUpdated(function (callable $get, callable $set) {
                     $total = collect($get('menuTransactions'))
@@ -94,7 +115,8 @@ class TransactionResource extends Resource
                 ->numeric()
                 ->disabled()
                 ->dehydrated()
-                ->required(),
+                ->required()
+                ->label('Total Harga'),
 
             DateTimePicker::make('created_at')
                 ->default(now())
@@ -107,14 +129,17 @@ class TransactionResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('kode_transaksi')->searchable(),
-                TextColumn::make('status')->badge(),
-                TextColumn::make('total_harga')->money('IDR', true),
-                TextColumn::make('created_at')->dateTime('d M Y H:i'),
+                Tables\Columns\TextColumn::make('kode_transaksi')->sortable(),
+            Tables\Columns\TextColumn::make('nama_pelanggan')->sortable(),
+            Tables\Columns\TextColumn::make('nomor_meja'),
+            Tables\Columns\TextColumn::make('metode_pembayaran'),
+            Tables\Columns\TextColumn::make('total_harga')->money('idr'),
+            Tables\Columns\TextColumn::make('created_at')->dateTime('d M Y H:i'),
             ])
             ->actions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                ->visible(fn ($record) => $record->status === 'menunggu'),
                 Action::make('konfirmasi')
                     ->label('Konfirmasi Pembayaran')
                     ->visible(fn ($record) => $record->status === 'menunggu')
@@ -123,7 +148,7 @@ class TransactionResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->action(function ($record) {
                         $record->update([
-                            'status' => 'diproses',
+                            'status' => 'selesai',
                         ]);
                     }),
             ])
@@ -186,5 +211,10 @@ class TransactionResource extends Resource
 
     public static function canDelete(Model $record): bool{
         return Auth::user()?->hasRole('super_admin');
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder{
+        return parent::getEloquentQuery()
+        ->whereIn('status', ['menunggu', 'diproses']);
     }
 }

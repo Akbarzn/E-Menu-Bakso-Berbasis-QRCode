@@ -22,7 +22,7 @@
         <button onclick="showCategory('minuman')">🥤 Minuman</button>
     </div>
 
-    <form method="POST" action="#">
+    <form method="POST" action="{{ route('order.form') }}">
         @csrf
 
         <div id="makanan" class="category">

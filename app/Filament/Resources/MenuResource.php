@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MenuResource\Pages;
+use Filament\Tables\Filters\TernaryFilter;
 use App\Filament\Resources\MenuResource\RelationManagers;
 use App\Models\Menu;
 use Filament\Forms;
@@ -38,7 +39,7 @@ class MenuResource extends Resource
             TextInput::make('harga')->numeric()->required(),
             TextInput::make('stok')->numeric()->required(),
             FileUpload::make('image')->image(),
-            Toggle::make('status')->label('Tersedia'),
+            Toggle::make('status')->label('Tersedia')->default(true),
             ]);
     }
 
@@ -50,11 +51,16 @@ class MenuResource extends Resource
                    TextColumn::make('id')->sortable(),
             TextColumn::make('nama_menu')->searchable(),
             TextColumn::make('harga')->money('IDR', true),
-            TextColumn::make('stok'),
+            // TextColumn::make('stok'),
             TextColumn::make('category.nama_kategori')->label('Kategori'),
             TextColumn::make('status')->badge(),
             ])
             ->filters([
+                TernaryFilter::make('status')
+                ->label('Tampilkan yang tersedia')
+                ->trueLabel('Tersedia')
+                ->falseLabel('Tidak Tersedia')
+                ->default(null),
                 //
             ])
             ->actions([
