@@ -21,6 +21,9 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Forms\Components\Placeholder;
+
 
 class MenuResource extends Resource
 {
@@ -38,7 +41,19 @@ class MenuResource extends Resource
             Textarea::make('deskripsi')->nullable(),
             TextInput::make('harga')->numeric()->required(),
             TextInput::make('stok')->numeric()->required(),
-            FileUpload::make('image')->image(),
+
+            FileUpload::make('image')
+    ->label('Gambar')
+    ->image()
+    ->directory('bukti') // folder di storage/app/public/bukti
+    ->preserveFilenames()
+    ->maxSize(2048)
+    ->visibility('public')   // WAJIB supaya bisa diakses
+    ->getUploadedFileNameForStorageUsing(fn ($file) => $file->getClientOriginalName())
+    ->openable() // bisa diklik untuk lihat gambar
+    ->downloadable() // bisa diunduh
+    ->previewable(), // pastikan preview aktif
+
             Toggle::make('status')->label('Tersedia')->default(true),
             ]);
     }
@@ -52,6 +67,14 @@ class MenuResource extends Resource
             TextColumn::make('nama_menu')->searchable(),
             TextColumn::make('harga')->money('IDR', true),
             // TextColumn::make('stok'),
+             ImageColumn::make('image')
+                ->label('Gambar')
+                ->disk('public')                // pakai disk public
+                ->visibility('public')          // pastikan public
+                ->height(80)                    // tinggi gambar
+                ->square()                      // bentuk kotak
+                ->defaultImageUrl(asset('images/no-image.png')), // fallback kalau kosong
+
             TextColumn::make('category.nama_kategori')->label('Kategori'),
             TextColumn::make('status')->badge(),
             ])

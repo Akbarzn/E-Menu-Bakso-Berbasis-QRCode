@@ -24,4 +24,8 @@ class Menu extends Model
     {
         return $this->hasMany(MenuTransaction::class);
     }
+
+    public function getImageUrlAttribute(){
+        return $this->image ? asset('storage/' . $this->image) : null;
+    }
 }

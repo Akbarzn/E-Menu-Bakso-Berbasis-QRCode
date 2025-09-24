@@ -1,8 +1,8 @@
 <?php 
 
 return[
-    'server_key' => env('MIDTRANS_SERVER_KEY', 'Mid-server-key'),
-    'client_key' => env('MIDTRANS_CLIENT_KEY', 'Mid-key'),
+    'server_key' => env('MIDTRANS_SERVER_KEY', 'Mid-server-xxx'),
+    'client_key' => env('MIDTRANS_CLIENT_KEY', 'Mid-client-xxx'),
     // true untuk production,false untuk sandbox
     'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
     // jika true maka akan nampilin notifikasi log/response
